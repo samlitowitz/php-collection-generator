@@ -4,21 +4,30 @@ namespace PhpCollectionGenerator\Collection;
 
 use PhpCollectionGenerator\App\Console\Config\Type;
 use PhpCollectionGenerator\IO\Writer;
+use phpDocumentor\Reflection\Types\Iterable_;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\BinaryOp\Identical;
+use PhpParser\Node\Expr\BinaryOp\NotEqual;
+use PhpParser\Node\Expr\BooleanNot;
+use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Foreach_;
+use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
@@ -50,7 +59,7 @@ final class Generator
 		$itemsPropertyStmt->setDocComment(
 			new Doc(
 				sprintf(
-					'/** @var %s $%s */',
+					'/** @var []%s $%s */',
 					$this->type->getItemFQN(),
 					self::ITEMS_PROP_NAME
 				)
@@ -121,8 +130,71 @@ final class Generator
 			]
 		);
 
+		$currentFnStmt = new ClassMethod(
+			'current',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new NullableType('self'),
+				'stmts' => [
+					new If_(
+						new Identical(
+							new PropertyFetch(
+								new Variable('this'),
+								new Identifier('iter')
+							),
+							new ConstFetch(new Name('null'))
+						),
+						[
+							'stmts' => [
+								new Return_(new ConstFetch(new Name('null'))),
+							],
+						]
+					),
+					new If_(
+						new BooleanNot(
+							new FuncCall(
+								new Name\FullyQualified('array_key_exists'),
+								[
+									new Arg(
+										new PropertyFetch(
+											new Variable('this'),
+											new Identifier(self::ITER_PROP_NAME)
+										)
+									),
+									new Arg(
+										new PropertyFetch(
+											new Variable('this'),
+											new Identifier(self::ITEMS_PROP_NAME)
+										)
+									),
+								]
+							)
+						),
+						[
+							'stmts' => [
+								new Return_(new ConstFetch(new Name('null'))),
+							],
+						]
+					),
+					new Return_(
+						new ArrayDimFetch(
+							new PropertyFetch(
+								new Variable('this'),
+								new Identifier(self::ITEMS_PROP_NAME)
+							),
+							new PropertyFetch(
+								new Variable('this'),
+								new Identifier(self::ITER_PROP_NAME)
+							)
+						)
+					),
+				],
+			]
+		);
+
 		$fnStmts = [
 			$fromArrayFnStmt,
+			$currentFnStmt,
 		];
 
 		$class = new Class_(
