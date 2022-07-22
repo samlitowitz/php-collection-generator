@@ -17,6 +17,7 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\PostInc;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
@@ -192,9 +193,41 @@ final class Generator
 			]
 		);
 
+		$nextFnStmt = new ClassMethod(
+			'next',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => null,
+				'stmts' => [
+					new If_(
+						new BooleanNot(
+							new MethodCall(
+								new Variable('this'),
+								new Identifier('valid')
+							)
+						),
+						[
+							'stmts' => [
+								new Return_(null),
+							],
+						]
+					),
+					new Expression(
+						new PostInc(
+							new PropertyFetch(
+								new Variable('this'),
+								new Identifier('iter')
+							)
+						)
+					)
+				],
+			]
+		);
+
 		$fnStmts = [
 			$fromArrayFnStmt,
 			$currentFnStmt,
+			$nextFnStmt,
 		];
 
 		$class = new Class_(
