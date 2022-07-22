@@ -1,0 +1,32 @@
+{
+    "name": "samlitowitz/php-collection-generator",
+    "description": "A tool to generate PHP collection implementations",
+    "type": "project",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Sam Litowitz",
+            "email": "samlitowitz@users.noreply.github.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "sort-packages": true,
+    "autoload": {
+        "psr-4": {
+            "PhpCollectionGenerator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpCollectionGenerator\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "symfony/console": "^6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9"
+    }
+}

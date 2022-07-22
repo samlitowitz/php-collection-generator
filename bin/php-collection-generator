@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types = 1);
+
+use PhpCollectionGenerator\App\Console\CLI;
+use PhpCollectionGenerator\App\Console\Commands\Generate;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$app = new CLI();
+
+$app->add(new Generate());
+
+$app->run();

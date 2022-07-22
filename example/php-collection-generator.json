@@ -1,0 +1,9 @@
+{
+	"types": [
+		{
+			"itemFQN": "PhpCollectionGenerator\\App\\Console\\Config\\Type",
+			"namespace": "PhpCollectionGenerator\\App\\Console\\Config",
+			"className": "TypeCollection"
+		}
+	]
+}
