@@ -1,7 +1,7 @@
 {
 	"types": [
 		{
-			"itemFQN": "PhpCollectionGenerator\\App\\Console\\Config\\Type",
+			"itemFQN": "Type",
 			"namespace": "PhpCollectionGenerator\\App\\Console\\Config",
 			"className": "TypeCollection"
 		}

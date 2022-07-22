@@ -12,6 +12,7 @@ use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotEqual;
+use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
@@ -24,6 +25,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
+use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
@@ -135,7 +137,7 @@ final class Generator
 			'current',
 			[
 				'flags' => Class_::MODIFIER_PUBLIC,
-				'returnType' => new NullableType('self'),
+				'returnType' => new NullableType($this->type->getItemFQN()),
 				'stmts' => [
 					new If_(
 						new Identical(
@@ -224,16 +226,153 @@ final class Generator
 			]
 		);
 
+		$keyFnStmt = new ClassMethod(
+			'key',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new NullableType('int'),
+				'stmts' => [
+					new Return_(
+						new PropertyFetch(
+							new Variable('this'),
+							new Identifier('iter')
+						)
+					)
+				],
+			]
+		);
+
+		$validFnStmt = new ClassMethod(
+			'valid',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new Identifier('bool'),
+				'stmts' => [
+					new Return_(
+						new NotIdentical(
+							new MethodCall(
+								new Variable('this'),
+								new Identifier('current')
+							),
+							new ConstFetch(new Name('null'))
+						)
+					),
+				],
+			]
+		);
+
+		$rewindFnStmt = new ClassMethod(
+			'rewind',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new Identifier('void'),
+				'stmts' => [
+					new If_(
+						new Identical(
+							new MethodCall(
+								new Variable('this'),
+								new Identifier('count')
+							),
+							new LNumber(0)
+						),
+						[
+							'stmts' => [
+								new Expression(
+									new Assign(
+										new PropertyFetch(
+											new Variable('this'),
+											new Identifier('iter')
+										),
+										new ConstFetch(new Name('null'))
+									)
+								),
+								new Return_(),
+							],
+						]
+					),
+					new Expression(
+						new Assign(
+							new PropertyFetch(
+								new Variable('this'),
+								new Identifier('iter')
+							),
+							new LNumber(0)
+						)
+					)
+				],
+			]
+		);
+
+		$countFnStmt = new ClassMethod(
+			'count',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new Identifier('int'),
+				'stmts' => [
+					new Return_(
+						new FuncCall(
+							new Name\FullyQualified('count'),
+							[
+								new Arg(
+									new PropertyFetch(
+										new Variable('this'),
+										new Identifier(self::ITEMS_PROP_NAME)
+									)
+								),
+							]
+						)
+					),
+				],
+			]
+		);
+
+		$addFnStmt = new ClassMethod(
+			'add',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => null,
+				'params' => [
+					new Param(
+						new Variable('entity'),
+						null,
+						new Name($this->type->getItemFQN())
+					),
+				],
+				'stmts' => [
+					new Expression(
+						new Assign(
+							new ArrayDimFetch(
+								new PropertyFetch(
+									new Variable('this'),
+									new Identifier(self::ITEMS_PROP_NAME)
+								),
+							),
+							new Variable('entity')
+						)
+					),
+				],
+			]
+		);
+
 		$fnStmts = [
 			$fromArrayFnStmt,
 			$currentFnStmt,
 			$nextFnStmt,
+			$keyFnStmt,
+			$validFnStmt,
+			$rewindFnStmt,
+			$countFnStmt,
+			$addFnStmt,
 		];
 
 		$class = new Class_(
 			$this->type->getClassName(),
 			[
 				'flags' => Class_::MODIFIER_FINAL,
+				'implements' => [
+					new Name\FullyQualified('Countable'),
+					new Name\FullyQualified('Iterator'),
+				],
 				'stmts' => \array_merge($propertyStmts, $fnStmts),
 			]
 		);

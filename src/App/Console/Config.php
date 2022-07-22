@@ -4,14 +4,15 @@ namespace PhpCollectionGenerator\App\Console;
 
 use JsonSerializable;
 use PhpCollectionGenerator\App\Console\Config\Type;
+use PhpCollectionGenerator\App\Console\Config\TypeCollection;
 
 final class Config implements JsonSerializable
 {
-	private array $types = [];
+	private TypeCollection $types;
 
-	private function __construct(array $types = [])
+	private function __construct(?TypeCollection $types = null)
 	{
-		$this->setTypes($types);
+		$this->setTypes($types ?? new TypeCollection());
 	}
 
 	public static function initialize(string $json): Config
@@ -21,9 +22,9 @@ final class Config implements JsonSerializable
 			'types' => $rawTypes,
 		] = $raw;
 
-		$types = [];
+		$types = new TypeCollection();
 		foreach ($rawTypes as $rawType) {
-			$types[] = Type::arrayDeserialize($rawType);
+			$types->add(Type::arrayDeserialize($rawType));
 		}
 
 		return new Config($types);
@@ -36,12 +37,12 @@ final class Config implements JsonSerializable
 		];
 	}
 
-	public function getTypes(): array
+	public function getTypes(): TypeCollection
 	{
 		return $this->types;
 	}
 
-	public function setTypes(array $types): void
+	public function setTypes(TypeCollection $types): void
 	{
 		$this->types = $types;
 	}
