@@ -11,6 +11,9 @@
     ],
     "minimum-stability": "stable",
     "sort-packages": true,
+    "bin":  [
+        "bin/php-collection-generator"
+    ],
     "autoload": {
         "psr-4": {
             "PhpCollectionGenerator\\": "src/"
