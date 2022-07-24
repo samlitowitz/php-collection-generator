@@ -10,7 +10,7 @@ final class Config implements JsonSerializable
 {
 	private TypeCollection $types;
 
-	private function __construct(?TypeCollection $types = null)
+	private function __construct(TypeCollection|null $types = null)
 	{
 		$this->setTypes($types ?? new TypeCollection());
 	}
