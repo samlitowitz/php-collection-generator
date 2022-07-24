@@ -333,21 +333,26 @@ final class Generator
 				'returnType' => null,
 				'params' => [
 					new Param(
-						new Variable('entity'),
+						new Variable('entities'),
 						null,
-						new Name($this->type->getItemFQN())
+						new Name($this->type->getItemFQN()),
+						false,
+						true
 					),
 				],
 				'stmts' => [
 					new Expression(
-						new Assign(
-							new ArrayDimFetch(
-								new PropertyFetch(
-									new Variable('this'),
-									new Identifier(self::ITEMS_PROP_NAME)
+						new FuncCall(
+							new Name\FullyQualified('array_push'),
+							[
+								new Arg(
+									new PropertyFetch(
+										new Variable('this'),
+										new Identifier('items')
+									)
 								),
-							),
-							new Variable('entity')
+								new Arg(new Variable('entities')),
+							]
 						)
 					),
 				],
