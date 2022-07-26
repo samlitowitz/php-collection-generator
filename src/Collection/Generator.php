@@ -4,14 +4,12 @@ namespace PhpCollectionGenerator\Collection;
 
 use PhpCollectionGenerator\App\Console\Config\Type;
 use PhpCollectionGenerator\IO\Writer;
-use phpDocumentor\Reflection\Types\Iterable_;
 use PhpParser\Comment\Doc;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp\Identical;
-use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\ConstFetch;
@@ -56,32 +54,35 @@ final class Generator
 		$itemsPropertyStmt = new Property(
 			Class_::MODIFIER_PRIVATE,
 			[
-				new PropertyProperty(self::ITEMS_PROP_NAME)
+				new PropertyProperty(
+					self::ITEMS_PROP_NAME,
+					new Array_()
+				),
+			],
+			[
+				new Doc(
+					sprintf(
+						'/** @var []%s $%s */',
+						$this->type->getItemFQN(),
+						self::ITEMS_PROP_NAME
+					)
+				),
 			]
-		);
-		$itemsPropertyStmt->setDocComment(
-			new Doc(
-				sprintf(
-					'/** @var []%s $%s */',
-					$this->type->getItemFQN(),
-					self::ITEMS_PROP_NAME
-				)
-			)
 		);
 		$iterPropertyStmt = new Property(
 			Class_::MODIFIER_PRIVATE,
 			[
-				new PropertyProperty(self::ITER_PROP_NAME)
+				new PropertyProperty(self::ITER_PROP_NAME),
+			],
+			[
+				new Doc(
+					sprintf(
+						'/** @var %s $%s */',
+						'?int',
+						self::ITER_PROP_NAME
+					)
+				),
 			]
-		);
-		$iterPropertyStmt->setDocComment(
-			new Doc(
-				sprintf(
-					'/** @var %s $%s */',
-					'?int',
-					self::ITER_PROP_NAME
-				)
-			)
 		);
 		$propertyStmts = [
 			$itemsPropertyStmt,
@@ -133,6 +134,137 @@ final class Generator
 			]
 		);
 
+		$countFnStmt = new ClassMethod(
+			'count',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new Identifier('int'),
+				'stmts' => [
+					new Return_(
+						new FuncCall(
+							new Name\FullyQualified('count'),
+							[
+								new Arg(
+									new PropertyFetch(
+										new Variable('this'),
+										new Identifier(self::ITEMS_PROP_NAME)
+									)
+								),
+							]
+						)
+					),
+				],
+			]
+		);
+
+		$jsonSerializeFnStmt = new ClassMethod(
+			'jsonSerialize',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => null,
+				'stmts' => [
+					new Return_(
+						new MethodCall(
+							new Variable('this'),
+							new Identifier('toArray')
+						)
+					),
+				],
+			]
+		);
+
+		$addFnStmt = new ClassMethod(
+			'add',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => null,
+				'params' => [
+					new Param(
+						new Variable('entities'),
+						null,
+						new Name($this->type->getItemFQN()),
+						false,
+						true
+					),
+				],
+				'stmts' => [
+					new Expression(
+						new FuncCall(
+							new Name\FullyQualified('array_push'),
+							[
+								new Arg(
+									new PropertyFetch(
+										new Variable('this'),
+										new Identifier('items')
+									)
+								),
+								new Arg(
+									new Variable('entities'),
+									false,
+									true
+								),
+							]
+						)
+					),
+				],
+			]
+		);
+
+		$toArrayFnStmt = new ClassMethod(
+			'toArray',
+			[
+				'flags' => Class_::MODIFIER_PUBLIC,
+				'returnType' => new Identifier('array'),
+				'stmts' => [
+					new Return_(
+						new PropertyFetch(
+							new Variable('this'),
+							new Identifier('items')
+						)
+					),
+				],
+			]
+		);
+
+		$fnStmts = array_merge(
+			[
+				$fromArrayFnStmt,
+				$countFnStmt,
+				$jsonSerializeFnStmt,
+				$toArrayFnStmt,
+				$addFnStmt,
+			],
+			$this->iteratorFnStmts(),
+		);
+
+		$class = new Class_(
+			$this->type->getClassName(),
+			[
+				'flags' => Class_::MODIFIER_FINAL,
+				'implements' => [
+					new Name\FullyQualified('Countable'),
+					new Name\FullyQualified('Iterator'),
+					new Name\FullyQualified('JsonSerializable')
+				],
+				'stmts' => \array_merge($propertyStmts, $fnStmts),
+			]
+		);
+
+		$namespace = new Namespace_(
+			new Name($this->type->getNamespace()),
+			[$class]
+		);
+
+		$prettyPrinter = new Standard(['shortArraySyntax' => true]);
+		$code = $prettyPrinter->prettyPrintFile([$namespace]);
+		$n = $this->w->write($code);
+		if ($n !== strlen($code)) {
+			throw new RuntimeException('Write failed: incomplete write');
+		}
+	}
+
+	private function iteratorFnStmts(): array
+	{
 		$currentFnStmt = new ClassMethod(
 			'current',
 			[
@@ -242,25 +374,6 @@ final class Generator
 			]
 		);
 
-		$validFnStmt = new ClassMethod(
-			'valid',
-			[
-				'flags' => Class_::MODIFIER_PUBLIC,
-				'returnType' => new Identifier('bool'),
-				'stmts' => [
-					new Return_(
-						new NotIdentical(
-							new MethodCall(
-								new Variable('this'),
-								new Identifier('current')
-							),
-							new ConstFetch(new Name('null'))
-						)
-					),
-				],
-			]
-		);
-
 		$rewindFnStmt = new ClassMethod(
 			'rewind',
 			[
@@ -303,95 +416,31 @@ final class Generator
 			]
 		);
 
-		$countFnStmt = new ClassMethod(
-			'count',
+		$validFnStmt = new ClassMethod(
+			'valid',
 			[
 				'flags' => Class_::MODIFIER_PUBLIC,
-				'returnType' => new Identifier('int'),
+				'returnType' => new Identifier('bool'),
 				'stmts' => [
 					new Return_(
-						new FuncCall(
-							new Name\FullyQualified('count'),
-							[
-								new Arg(
-									new PropertyFetch(
-										new Variable('this'),
-										new Identifier(self::ITEMS_PROP_NAME)
-									)
-								),
-							]
+						new NotIdentical(
+							new MethodCall(
+								new Variable('this'),
+								new Identifier('current')
+							),
+							new ConstFetch(new Name('null'))
 						)
 					),
 				],
 			]
 		);
 
-		$addFnStmt = new ClassMethod(
-			'add',
-			[
-				'flags' => Class_::MODIFIER_PUBLIC,
-				'returnType' => null,
-				'params' => [
-					new Param(
-						new Variable('entities'),
-						null,
-						new Name($this->type->getItemFQN()),
-						false,
-						true
-					),
-				],
-				'stmts' => [
-					new Expression(
-						new FuncCall(
-							new Name\FullyQualified('array_push'),
-							[
-								new Arg(
-									new PropertyFetch(
-										new Variable('this'),
-										new Identifier('items')
-									)
-								),
-								new Arg(new Variable('entities')),
-							]
-						)
-					),
-				],
-			]
-		);
-
-		$fnStmts = [
-			$fromArrayFnStmt,
+		return [
 			$currentFnStmt,
 			$nextFnStmt,
 			$keyFnStmt,
-			$validFnStmt,
 			$rewindFnStmt,
-			$countFnStmt,
-			$addFnStmt,
+			$validFnStmt,
 		];
-
-		$class = new Class_(
-			$this->type->getClassName(),
-			[
-				'flags' => Class_::MODIFIER_FINAL,
-				'implements' => [
-					new Name\FullyQualified('Countable'),
-					new Name\FullyQualified('Iterator'),
-				],
-				'stmts' => \array_merge($propertyStmts, $fnStmts),
-			]
-		);
-
-		$namespace = new Namespace_(
-			new Name($this->type->getNamespace()),
-			[$class]
-		);
-
-		$prettyPrinter = new Standard();
-		$code = $prettyPrinter->prettyPrintFile([$namespace]);
-		$n = $this->w->write($code);
-		if ($n !== strlen($code)) {
-			throw new RuntimeException('Write failed: incomplete write');
-		}
 	}
 }
