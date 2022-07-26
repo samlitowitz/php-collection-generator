@@ -2,11 +2,9 @@
 
 namespace PhpCollectionGenerator\App\Console\Config;
 
-final class TypeCollection implements \Countable, \Iterator
+final class TypeCollection implements \Countable, \Iterator, \JsonSerializable
 {
-	/** @var []Type $items */
-	private $items;
-	/** @var ?int $iter */
+	private $items = [];
 	private $iter;
 
 	public static function fromArray(array $items = []): self
@@ -16,6 +14,26 @@ final class TypeCollection implements \Countable, \Iterator
 			$collection->add($item);
 		}
 		return $collection;
+	}
+
+	public function count(): int
+	{
+		return \count($this->items);
+	}
+
+	public function jsonSerialize()
+	{
+		return $this->toArray();
+	}
+
+	public function toArray(): array
+	{
+		return $this->items;
+	}
+
+	public function add(Type ...$entities)
+	{
+		\array_push($this->items, ...$entities);
 	}
 
 	public function current(): ?Type
@@ -42,11 +60,6 @@ final class TypeCollection implements \Countable, \Iterator
 		return $this->iter;
 	}
 
-	public function valid(): bool
-	{
-		return $this->current() !== null;
-	}
-
 	public function rewind(): void
 	{
 		if ($this->count() === 0) {
@@ -56,13 +69,8 @@ final class TypeCollection implements \Countable, \Iterator
 		$this->iter = 0;
 	}
 
-	public function count(): int
+	public function valid(): bool
 	{
-		return \count($this->items);
-	}
-
-	public function add(Type ...$entities)
-	{
-		\array_push($this->items, $entities);
+		return $this->current() !== null;
 	}
 }
