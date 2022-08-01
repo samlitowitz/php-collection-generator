@@ -177,7 +177,7 @@ final class Generator
 			'add',
 			[
 				'flags' => Class_::MODIFIER_PUBLIC,
-				'returnType' => null,
+				'returnType' => new Identifier('void'),
 				'params' => [
 					new Param(
 						new Variable('entities'),
