@@ -5,7 +5,17 @@ declare(strict_types = 1);
 use PhpCollectionGenerator\App\Console\CLI;
 use PhpCollectionGenerator\App\Console\Commands\Generate;
 
-require __DIR__ . '/../vendor/autoload.php';
+$autoloadFiles = [
+	__DIR__ . '/../vendor/autoload.php',
+	__DIR__ . '/../../../autoload.php'
+];
+
+foreach ($autoloadFiles as $autoloadFile) {
+	if (file_exists($autoloadFile)) {
+		require_once $autoloadFile;
+		break;
+	}
+}
 
 $app = new CLI();
 
