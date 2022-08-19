@@ -8,9 +8,10 @@ use PhpCollectionGenerator\App\Console\Config\TypeCollection;
 
 final class Config implements JsonSerializable
 {
-	private TypeCollection $types;
+	/** @var TypeCollection */
+	private $types;
 
-	private function __construct(TypeCollection|null $types = null)
+	private function __construct(?TypeCollection $types = null)
 	{
 		$this->setTypes($types ?? new TypeCollection());
 	}

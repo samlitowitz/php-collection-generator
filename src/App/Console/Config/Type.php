@@ -8,9 +8,12 @@ use JsonSerializable;
 
 final class Type implements JsonSerializable
 {
-	private string $itemFQN;
-	private string $namespace;
-	private string $className;
+	/** @var string */
+	private $itemFQN;
+	/** @var string */
+	private $namespace;
+	/** @var string */
+	private $className;
 
 	private function __construct()
 	{

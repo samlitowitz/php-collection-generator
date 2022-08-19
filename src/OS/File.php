@@ -9,7 +9,8 @@ use RuntimeException;
 final class File implements Closer, Writer {
 	/** @var resource $h */
 	private $h;
-	private string $name;
+	/** @var string */
+	private $name;
 
 	private function __construct(string $name)
 	{
