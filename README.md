@@ -50,4 +50,3 @@ The generated collection includes the following methods in addition to those nee
       1. type-hint member variables
          1. inline
          2. as comment
-      2. tabs vs spaces
