@@ -1,0 +1,52 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://raw.githubusercontent.com/samlitowitz/php-collection-generator/master/assets/schema/configuration.json",
+	"title": "PHP Collection Generator Configuration",
+	"description": "Configuration for PHP Collection Generator",
+	"type": "object",
+	"properties": {
+		"types": {
+			"description": "An array of types to generate PHP collection implementations for.",
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/type"
+			}
+		}
+	},
+	"required": [
+		"types"
+	],
+	"$defs": {
+		"type": {
+			"type": "object",
+			"properties": {
+				"itemFQN": {
+					"description": "Fully qualified name of the type contained by the collection.",
+					"examples": [
+						"Namespace\\Path\\To\\Item\\ClassName"
+					],
+					"type": "string"
+				},
+				"namespace": {
+					"description": "Namespace that the collection will belong to.",
+					"examples": [
+						"Namespace\\Path\\To\\Collection"
+					],
+					"type": "string"
+				},
+				"className": {
+					"description": "Class name of the collection.",
+					"examples": [
+						"ClassNameCollection"
+					],
+					"type": "string"
+				}
+			},
+			"required": [
+				"itemFQN",
+				"namespace",
+				"className"
+			]
+		}
+	}
+}
