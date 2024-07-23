@@ -1,10 +1,13 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace PhpCollectionGenerator\App\Console\Config;
 
 use JsonSerializable;
+
+use function call_user_func_array;
+use function ucfirst;
 
 final class Type implements JsonSerializable
 {
@@ -23,7 +26,7 @@ final class Type implements JsonSerializable
 	{
 		$type = new Type();
 		foreach ($input as $prop => $value) {
-			\call_user_func_array([$type, 'set' . \ucfirst($prop)], [$value]);
+			call_user_func_array([$type, 'set' . ucfirst($prop)], [$value]);
 		}
 		return $type;
 	}
