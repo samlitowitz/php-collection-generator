@@ -24,6 +24,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
@@ -263,6 +264,9 @@ final class Generator
 		}
 	}
 
+	/**
+	 * @return array<Stmt>
+	 */
 	private function iteratorFnStmts(): array
 	{
 		$currentFnStmt = new ClassMethod(
