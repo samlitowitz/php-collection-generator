@@ -14,7 +14,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Throwable;
 
 final class Generate extends Command
 {
@@ -22,6 +21,7 @@ final class Generate extends Command
 	protected static $defaultDescription = 'Generate PHP collection implementations for a set of types';
 	private const OUTPUT_DIR_ARG = 'output-dir';
 
+	// @phpstan-ignore missingType.return
 	protected function configure()
 	{
 		$this
@@ -34,10 +34,12 @@ final class Generate extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
+		/** @var string $outputDirectory */
 		$outputDirectory = $input->getArgument(self::OUTPUT_DIR_ARG);
 
+		/** @var string $configFileName */
 		$configFileName = $input->getOption(CLI::CONFIG_OPT);
-		$rawConfigData = \file_get_contents($configFileName);
+		$rawConfigData = file_get_contents($configFileName);
 		if ($rawConfigData === false) {
 			throw new InvalidArgumentException(
 				sprintf(
