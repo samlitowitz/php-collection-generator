@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace PhpCollectionGenerator\App\Console\Commands;
 
@@ -17,51 +17,51 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class Generate extends Command
 {
-	protected static $defaultName = 'generate';
-	protected static $defaultDescription = 'Generate PHP collection implementations for a set of types';
-	private const OUTPUT_DIR_ARG = 'output-dir';
+    protected static $defaultName = 'generate';
+    protected static $defaultDescription = 'Generate PHP collection implementations for a set of types';
+    private const OUTPUT_DIR_ARG = 'output-dir';
 
-	// @phpstan-ignore missingType.return
-	protected function configure()
-	{
-		$this
-			->addArgument(
-				self::OUTPUT_DIR_ARG,
-				InputArgument::REQUIRED,
-				'Output directory'
-			);
-	}
+    // @phpstan-ignore missingType.return
+    protected function configure()
+    {
+        $this
+            ->addArgument(
+                self::OUTPUT_DIR_ARG,
+                InputArgument::REQUIRED,
+                'Output directory'
+            );
+    }
 
-	protected function execute(InputInterface $input, OutputInterface $output): int
-	{
-		/** @var string $outputDirectory */
-		$outputDirectory = $input->getArgument(self::OUTPUT_DIR_ARG);
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        /** @var string $outputDirectory */
+        $outputDirectory = $input->getArgument(self::OUTPUT_DIR_ARG);
 
-		/** @var string $configFileName */
-		$configFileName = $input->getOption(CLI::CONFIG_OPT);
-		$rawConfigData = file_get_contents($configFileName);
-		if ($rawConfigData === false) {
-			throw new InvalidArgumentException(
-				sprintf(
-					'unable to load config %s',
-					$configFileName
-				)
-			);
-		}
-		$config = Config::initialize($rawConfigData);
-		$types = $config->getTypes();
+        /** @var string $configFileName */
+        $configFileName = $input->getOption(CLI::CONFIG_OPT);
+        $rawConfigData = file_get_contents($configFileName);
+        if ($rawConfigData === false) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'unable to load config %s',
+                    $configFileName
+                )
+            );
+        }
+        $config = Config::initialize($rawConfigData);
+        $types = $config->getTypes();
 
-		/** @var Type $type */
-		foreach ($types as $type) {
-			$outputFile = File::openFile($outputDirectory . '/' . $type->getClassName() . '.php', 'w+');
-			try {
-				$gen = new Generator($type, $outputFile);
-				$gen->generate();
-			} finally {
-				$outputFile->close();
-			}
-		}
+        /** @var Type $type */
+        foreach ($types as $type) {
+            $outputFile = File::openFile($outputDirectory . '/' . $type->getClassName() . '.php', 'w+');
+            try {
+                $gen = new Generator($type, $outputFile);
+                $gen->generate();
+            } finally {
+                $outputFile->close();
+            }
+        }
 
-		return Command::SUCCESS;
-	}
+        return Command::SUCCESS;
+    }
 }
