@@ -1,6 +1,8 @@
 parameters:
 	paths:
 		- src
+	excludePaths:
+		- src/App/Console/Config/TypeCollection.php
 	level: max
 includes:
 	- vendor/phpstan/phpstan-symfony/extension.neon
