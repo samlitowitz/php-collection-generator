@@ -6,6 +6,7 @@ services:
         ports:
             - "9000:9000"
         user: "${DOCKER_USER}"
+        working_dir: /app
         volumes:
             - ./:/app
             - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
