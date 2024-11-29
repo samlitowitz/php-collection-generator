@@ -22,10 +22,14 @@ final class Type implements JsonSerializable
 	{
 	}
 
+	/**
+	 * @param array<string, mixed> $input
+	 */
 	public static function arrayDeserialize(array $input): Type
 	{
 		$type = new Type();
 		foreach ($input as $prop => $value) {
+			// @phpstan-ignore argument.type
 			call_user_func_array([$type, 'set' . ucfirst($prop)], [$value]);
 		}
 		return $type;

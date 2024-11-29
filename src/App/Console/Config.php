@@ -18,7 +18,9 @@ final class Config implements JsonSerializable
 
 	public static function initialize(string $json): Config
 	{
-		$raw = \json_decode($json, true);
+		/** @var array<string, mixed> $raw */
+		$raw = json_decode($json, true);
+		/** @var array<array<string, mixed>> $rawTypes */
 		[
 			'types' => $rawTypes,
 		] = $raw;
