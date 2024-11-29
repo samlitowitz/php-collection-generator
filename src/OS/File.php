@@ -17,6 +17,9 @@ final class File implements Closer, Writer {
 		$this->setName($name);
 	}
 
+	/**
+	 * @param resource|null $context
+	 */
 	public static function openFile(string $filename, string $mode, bool $use_include_path = false, $context = null): File
 	{
 		$f = new File($filename);
@@ -57,6 +60,9 @@ final class File implements Closer, Writer {
 		return $n;
 	}
 
+	/**
+	 * @param resource $h
+	 */
 	private function setHandle($h): void
 	{
 		$this->h = $h;
