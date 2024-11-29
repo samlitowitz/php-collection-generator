@@ -3,4 +3,5 @@ parameters:
 		- src
 	level: max
 includes:
+	- vendor/phpstan/phpstan-symfony/extension.neon
 	- vendor/samlitowitz/phpstan-opinionated-nomenclature/extension.neon
