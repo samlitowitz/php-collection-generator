@@ -55,7 +55,7 @@ final class Generate extends Command
         foreach ($types as $type) {
             $outputFile = File::openFile($outputDirectory . '/' . $type->getClassName() . '.php', 'w+');
             try {
-                $gen = new Generator($type, $outputFile);
+                $gen = new Generator($type, $outputFile, $configFileName);
                 $gen->generate();
             } finally {
                 $outputFile->close();
